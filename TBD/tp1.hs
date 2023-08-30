@@ -33,22 +33,28 @@ d ! e = get e d
 
 -- Ejercicio 3
 insertWith :: Eq k => (v -> v -> v) -> k -> v -> Dict k v -> Dict k v
-insertWith f key val d = if (d ? key) then aplicoF else d++[(key,val)]
-            where aplicoF = recr (\x xs r -> if (fst x)==key then (xs ++ [(fst x,(f (snd x) val))]) else r) [] d
+insertWith f key val d = if (d ? key) then aplicoF else (key,val):d 
+            where aplicoF = foldr (\(xuno, xdos) r -> if xuno==key then (xuno,(f (xdos) val)):r else (xuno, xdos):r) [] d
 
 --Main> insertWith (++) 2 ['p'] (insertWith (++) 1 ['a','b'] (insertWith (++) 1 ['l'] []))
 --[(1,"lab"),(2,"p")]
 
 -- Ejercicio 4
 groupByKey :: Eq k => [(k,v)] -> Dict k [v]
-groupByKey = foldr1 (\x r -> insertWith (++) (fst x) ([snd x]) r)
+groupByKey  = foldr (\(a,b) r -> insertWith (++) a [b] r) [] 
+                -- where f = head l
+--[1,2,3] = 1 g (2 g (3 f CB))
+--groupByKey [( " calle " ," Jean ␣ Jaures " ) ,( " ciudad " ," Brujas " ) ,( " ciudad " ," Kyoto " ) ,( " calle " ," 7 " )]
 
 -- Ejercicio 5
 unionWith :: Eq k => (v -> v -> v) -> Dict k v -> Dict k v -> Dict k v
-unionWith = undefined
+unionWith f dUno dDos = map (miFParaMap f) (groupByKey (dUno ++ dDos))
+
+miFParaMap :: (v -> v -> v) -> (k,[v]) -> (k,v)
+miFParaMap f (a,b) = (a, (foldr1 (\x r-> f r x)) b )
+
 --Main> unionWith (++) [("calle",[3]),("city",[2,1])] [("calle", [4]), ("altura", [1,3,2])]
 --[("calle",[3,4]),("city",[2,1]),("altura",[1,3,2])]
-
 
 -- ------------------------------Sección 2--------------MapReduce---------------------------
 
@@ -57,15 +63,26 @@ type Reducer k v b = (k, [v]) -> [b]
 
 -- Ejercicio 6
 distributionProcess :: Int -> [a] -> [[a]]
-distributionProcess = undefined
+distributionProcess cant l =  foldr (\x r -> (x:(last r)):(init r)) (replicate cant []) l  
 
 -- Ejercicio 7
 mapperProcess :: Eq k => Mapper a k v -> [a] -> Dict k [v]
-mapperProcess = undefined
+mapperProcess m l = groupByKey (concat (map m l))
+
 
 -- Ejercicio 8
+
 combinerProcess :: (Eq k, Ord k) => [Dict k [v]] -> Dict k [v]
-combinerProcess = undefined
+combinerProcess = foldr1 (\x r -> unionWith (++) x r)
+--combinerProcess d = unionWith (++) (concat d) 
+-- palabras = [[(1,["Hola","Chau"]),(2,["Perro","Gato"])],[(2,["Jirafa"])],[(3,["Casa"]),
+          --  (4,["Tren", "Auto"]), (1, ["Saludos"])],[(2, ["Perro"]), (4, ["Barco"])]]
+
+
+-- Dict k [[v]] 
+
+
+--greater :: (k, [[v]]) -> (k, [[v]]) -> Ordering
 
 -- Ejercicio 9
 reducerProcess :: Reducer k v b -> Dict k [v] -> [b]
