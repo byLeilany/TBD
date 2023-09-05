@@ -4,14 +4,12 @@ import Data.Ord
 import Data.List
 import Test.HUnit
 
--- ---------------------------------Sección 1---------Diccionario ---------------------------
+----------------------------------Integrantes----------Taller 1---------------------------
+--Bramati, Bianca (LU 1893/21)
+--Melendez Rangel, Daniela Leilany del Carmen (102/20)
+--Tiracchia, Thiago (LU 1502/21)
+-----------------------------------Sección 1---------Diccionario ---------------------------
 type Dict k v = [(k,v)]
-
-
-recr::(a->[a]->b->b)->b->[a]->b
-recr _ z [] = z
-recr f z (x:xs) = f x xs (recr f z xs)
-
 
 -- Ejercicio 1
 belongs :: Eq k => k -> Dict k v -> Bool
@@ -19,8 +17,6 @@ belongs e = foldr (\x r -> (fst x)== e || r) False
 
 (?) :: Eq k => Dict k v -> k -> Bool
 k ? v = belongs v k
---Main> [("calle",[3]),("city",[2,1])] ? "city" 
---True
 
 -- Ejercicio 2
 get :: Eq k => k -> Dict k v -> v
@@ -28,40 +24,31 @@ get e d = snd (foldr (\x r -> if fst x==e then x else r) (head d) d)
 
 (!) :: Eq k => Dict k v -> k -> v
 d ! e = get e d 
---Main> [("calle",[3]),("city",[2,1])] ! "city" 
---[2,1]
 
--- Ejercicio 3
+-- Ejercicio 3: inserto (clave, valor) en el Dict cuando clave NO belongs. Y caso then: busco con foldr dentro del dict hasta llegar a elemento en dict con clave e, 
+-- hago la funcion f con val y valor actual de ese elemento, el resto de elementos del Dict los dejo igual
 insertWith :: Eq k => (v -> v -> v) -> k -> v -> Dict k v -> Dict k v
 insertWith f key val d = if (d ? key) then aplicoF else (key,val):d 
-            where aplicoF = foldr (\(xuno, xdos) r -> if xuno==key then (xuno,(f (xdos) val)):r else (xuno, xdos):r) [] d
-
---Main> insertWith (++) 2 ['p'] (insertWith (++) 1 ['a','b'] (insertWith (++) 1 ['l'] []))
---[(1,"lab"),(2,"p")]
+            where aplicoF = foldr (\(a, b) r -> if a==key then (a,(f (b) val)):r else (a, b):r) [] d
 
 -- Ejercicio 4
 groupByKey :: Eq k => [(k,v)] -> Dict k [v]
 groupByKey  = foldr (\(a,b) r -> insertWith (++) a [b] r) [] 
-                -- where f = head l
---[1,2,3] = 1 g (2 g (3 f CB))
---groupByKey [( " calle " ," Jean ␣ Jaures " ) ,( " ciudad " ," Brujas " ) ,( " ciudad " ," Kyoto " ) ,( " calle " ," 7 " )]
 
--- Ejercicio 5
+-- Ejercicio 5 : Junto los 2 diccionarios y combino sus claves, y como esto hace que me queden tuplas con una lista, le aplico f a cada lista de cada tupla
 unionWith :: Eq k => (v -> v -> v) -> Dict k v -> Dict k v -> Dict k v
-unionWith f dUno dDos = map (miFParaMap f) (groupByKey (dUno ++ dDos))
+unionWith f d1 d2 = map (fEnSecond f) (groupByKey (d1 ++ d2))
+--Hacemos un map con fEnSecond f ya que groupByKey nos devuelve Dict (k,[v]) y queremos Dict (k, v) combinando los valores de [v] según f. 
+fEnSecond :: (v -> v -> v) -> (k,[v]) -> (k,v)
+fEnSecond f (a,b) = (a, (foldr1 (\x r-> f r x)) b )
 
-miFParaMap :: (v -> v -> v) -> (k,[v]) -> (k,v)
-miFParaMap f (a,b) = (a, (foldr1 (\x r-> f r x)) b )
 
---Main> unionWith (++) [("calle",[3]),("city",[2,1])] [("calle", [4]), ("altura", [1,3,2])]
---[("calle",[3,4]),("city",[2,1]),("altura",[1,3,2])]
-
--- ------------------------------Sección 2--------------MapReduce---------------------------
+---------------------------------Sección 2--------------MapReduce---------------------------
 
 type Mapper a k v = a -> [(k,v)]
 type Reducer k v b = (k, [v]) -> [b]
 
--- Ejercicio 6
+-- Ejercicio 6: Repartimos en una forma circular en la lista, vamos rotando (traigo el ultimo elem, le agrego el x, y la envio al final)
 distributionProcess :: Int -> [a] -> [[a]]
 distributionProcess cant l =  foldr (\x r -> (x:(last r)):(init r)) (replicate cant []) l  
 
@@ -69,29 +56,17 @@ distributionProcess cant l =  foldr (\x r -> (x:(last r)):(init r)) (replicate c
 mapperProcess :: Eq k => Mapper a k v -> [a] -> Dict k [v]
 mapperProcess m l = groupByKey (concat (map m l))
 
-
--- Ejercicio 8
-
+-- Ejercicio 8 SORT BY QUÉ
 combinerProcess :: (Eq k, Ord k) => [Dict k [v]] -> Dict k [v]
 combinerProcess = foldr1 (\x r -> unionWith (++) x r)
---combinerProcess d = unionWith (++) (concat d) 
--- palabras = [[(1,["Hola","Chau"]),(2,["Perro","Gato"])],[(2,["Jirafa"])],[(3,["Casa"]),
-          --  (4,["Tren", "Auto"]), (1, ["Saludos"])],[(2, ["Perro"]), (4, ["Barco"])]]
-
-
--- Dict k [[v]] 
-
-
---greater :: (k, [[v]]) -> (k, [[v]]) -> Ordering
 
 -- Ejercicio 9
 reducerProcess :: Reducer k v b -> Dict k [v] -> [b]
-reducerProcess = undefined
+reducerProcess r d = concat (map r d) 
 
 -- Ejercicio 10
 mapReduce :: (Eq k, Ord k) => Mapper a k v -> Reducer k v b -> [a] -> [b]
-mapReduce = undefined
-
+mapReduce m r l = reducerProcess r (combinerProcess (map (mapperProcess m) (distributionProcess 100 l)))
 
 --Funciones de prueba --
 
