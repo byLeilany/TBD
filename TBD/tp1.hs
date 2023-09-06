@@ -3,6 +3,7 @@ module MapReduce where
 import Data.Ord
 import Data.List
 import Test.HUnit
+import Data.Function 
 
 ----------------------------------Integrantes----------Taller 1---------------------------
 --Bramati, Bianca (LU 1893/21)
@@ -56,9 +57,10 @@ distributionProcess cant l =  foldr (\x r -> (x:(last r)):(init r)) (replicate c
 mapperProcess :: Eq k => Mapper a k v -> [a] -> Dict k [v]
 mapperProcess m l = groupByKey (concat (map m l))
 
--- Ejercicio 8 SORT BY QUÉ
+-- Ejercicio 8 
 combinerProcess :: (Eq k, Ord k) => [Dict k [v]] -> Dict k [v]
-combinerProcess = foldr1 (\x r -> unionWith (++) x r)
+combinerProcess dic = sortBy (on compare fst) combined
+                where combined = foldr1 (\x r -> unionWith (++) x r) dic
 
 -- Ejercicio 9
 reducerProcess :: Reducer k v b -> Dict k [v] -> [b]
