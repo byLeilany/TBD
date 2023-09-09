@@ -55,7 +55,7 @@ distributionProcess cant l =  foldr (\x r -> (x:(last r)):(init r)) (replicate c
 
 -- Ejercicio 7
 mapperProcess :: Eq k => Mapper a k v -> [a] -> Dict k [v]
-mapperProcess m l = groupByKey (concat (map m l))
+mapperProcess m l =  groupByKey (concat (map m l))
 
 -- Ejercicio 8 
 combinerProcess :: (Eq k, Ord k) => [Dict k [v]] -> Dict k [v]
@@ -120,6 +120,7 @@ mapperOPV (monument, visitCount) = [(-visitCount, monument)]
 reducerOPV :: Reducer Int String String
 reducerOPV = snd
 
+
 ordenarPorVisitas :: [(String, Int)] -> [String]
 ordenarPorVisitas = mapReduce mapperOPV reducerOPV
 
@@ -178,44 +179,98 @@ allTests = test [
   
 testsEj1 = test [
   ([("calle",[3]),("ciudad",[2,1])] ? "ciudad")  ~=? True,
-  ([("calle",[3]),("ciudad",[2,1])] ? "perro")  ~=? False --Agregar sus propios tests.
+  ([("calle",[3]),("ciudad",[2,1])] ? "perro")  ~=? False,
+   --Agregar sus propios tests.
+  ([(5 , 25),( 1 , 8 )] ? 5 ) ~=? True,
+  ([(5 , 25),( 1 , 8 )] ? 10 ) ~=? False
   ]
 
 testsEj2 = test [
-  [("calle","San Blas"),("ciudad","Hurlingham")] ! "ciudad" ~=? "Hurlingham" --Agregar sus propios tests.
+  [("calle","San Blas"),("ciudad","Hurlingham")] ! "ciudad" ~=? "Hurlingham",
+  --Agregar sus propios tests.
+  [("Manuel",10 ),("Malena", 10) , ("Pablo", 10) , ("Gabi", 10) , ("Dani", 10)] ! "Pablo" ~=? 10,
+  [("banana", [50,90,80,69]) , ("frutilla", [15,30,51])] ! "banana" ~=? [50,90,80,69]
   ]
 
 testsEj3 = test [
-  (insertWith (++) 1 [99] [(1, [1]), (2, [2])]) ~=? [(1,[1,99]),(2,[2])] --Agregar sus propios tests.
+  (insertWith (++) 1 [99] [(1, [1]), (2, [2])]) ~=? [(1,[1,99]),(2,[2])],
+   --Agregar sus propios tests.
+  (insertWith (++) 4 [99] [(1, [1]), (2, [2])]) ~=? [ (4, [99]) ,(1,[1]),(2,[2])],
+  (insertWith (+) "ayuda" 10 [("ayuda", 90), ("beo", 50)] )~=? [("ayuda", 100), ("beo", 50)], 
+  (insertWith (+) "a" 10 [("ayuda", 90), ("beo", 50)] )~=? [("a", 10),("ayuda", 90), ("beo", 50)]
   ]
 
 testsEj4 = test [
-  0 ~=? 0 --Cambiar esto por tests verdaderos.
+  (groupByKey [( " calle " ," Jean ␣ Jaures " ) ,( " ciudad " ," Brujas " ) , ( " ciudad " ," Kyoto " ) ,( " calle " ," 7 " )]) ~=?
+  [( " ciudad " ,[ " Kyoto "," Brujas "  ]) ,( " calle " ,[ " 7 "," Jean ␣ Jaures "  ])], --Cambiar esto por tests verdaderos.
+  groupByKey [( "a" ,1 ) ,( "b" , 2) , ( "c" , 1) ,( "d" ,7)] ~=?
+  [( "a" ,[1] ) ,( "b" , [2]), ( "c" , [1]) ,( "d" ,[7])],  
+
+  groupByKey [( "a" ,1 ) ,( "b" , 2) , ( "a" , 1) ,( "d" ,7)] ~=?
+  [( "b" , [2]), ( "a" ,[1,1] ) , ( "d" , [7])]
   ]
 
 testsEj5 = test [
-  (unionWith (+) [("rutas",3)] [("rutas", 4), ("ciclos", 1)]) ~=? [("rutas",7),("ciclos",1)] --Agregar sus propios tests.
+  (unionWith (+) [("rutas",3)] [("rutas", 4), ("ciclos", 1)]) ~=? [("rutas",7),("ciclos",1)], 
+  --Agregar sus propios tests.
+  (unionWith (+) [("rutas",3), ("boca", 7)] [("rutas", 4), ("ciclos", 1)]) ~=? [ ("boca", 7),("rutas",7),("ciclos",1)],
+  (unionWith (++) [("ayuda", [3]), ("parcial", [7,0])] [("facil", [4,20]), ("parcial", [1,6,9])]) ~=? [("ayuda", [3]), ("facil", [4,20]) , ("parcial", [7,0,1,6,9])]
   ]
 
 testsEj6 = test [
-  0 ~=? 0 --Cambiar esto por tests verdaderos.
+  (distributionProcess 5 [10 ,11 ,12] )~=? [[10] ,[11] ,[12] ,[] ,[]],--Cambiar esto por tests verdaderos.
+  (distributionProcess 5 [10 ,11 ,12,16,17] )~=? [[10] ,[11] ,[12] ,[16] ,[17]],
+  (distributionProcess 10 [1..18] )~=? [[1,11] ,[2,12] ,[3,13] ,[4,14] ,[5,15],[6,16], [7,17],[8,18],[9],[10]]
+
   ]
 
 testsEj7 = test [
-  mapperProcess mapperRestos [1, 5, 10, 25, 3, 14, 4] ~=? [(4,[4,14]),(3,[3]),(0,[25,10,5]),(1,[1])] --Agregar sus propios tests.
+  sortBy (on compare fst) (mapperProcess mapperRestos [1, 5, 10, 25, 3, 14, 4]) ~=?  sortBy (on compare fst) ([(4,[4,14]),(3,[3]),(0,[25,10,5]),(1,[1])] ) ,
+  --Agregar sus propios tests.
+   (mapperProcess mapperVPM ["hola","no","se","que", "esunmonumento"]) ~=?  [("hola",[()]),("no",[()]),("se",[()]),("que",[()]),("esunmonumento",[()])],
+   (mapperProcess mapperVPM ["hola","no","se","que", "esunmonumento","hola","hola"]) ~=?  [("no",[()]),("se",[()]),("que",[()]),("esunmonumento",[()]) , ("hola",[(),(),()])]
   ]
 
+
+
+-- 
+
+midictonari = [  [("key1",["a","b"]),("key2",["a","c"])] , [("key1",["a"])] ]
+otracosa = [ [("key1",["a","b"]),("key2",["a","c"])] ]
+
+
+--
 testsEj8 = test [
-  (map (\(x,y)->(x,sort y)) $ combinerProcess palabras) ~=? [(1,["Chau","Hola","Saludos"]),(2,["Gato","Jirafa","Perro","Perro"]),(3,["Casa"]),(4,["Auto","Barco","Tren"])]
+  (map (\(x,y)->(x,sort y)) $ combinerProcess palabras) ~=? [(1,["Chau","Hola","Saludos"]),(2,["Gato","Jirafa","Perro","Perro"]),(3,["Casa"]),(4,["Auto","Barco","Tren"])],
  --Agregar sus propios tests.
+ combinerProcess midictonari ~=? [("key1",["a","b","a"]),("key2",["a","c"])],
+  combinerProcess otracosa ~=? [("key1",["a","b"]),("key2",["a","c"])]
   ]
+
+--
+reducerdiapos :: Reducer String Int (String, Int)
+reducerdiapos (monumento, visitas) = [(monumento, length visitas)]
+
+
+
+
+
+--
 
 testsEj9 = test [
-  reducerProcess (\(x, xs)->x : nub xs)  [("Saludo:",["Chau","Hola","Saludos"]),("Mamífero:",["Gato","Jirafa","Perro","Perro"]),("Edificio:",["Casa"]),("Vehículo:",["Auto","Barco","Tren"])] ~=? ["Saludo:","Chau","Hola","Saludos","Mamífero:","Gato","Jirafa","Perro","Edificio:","Casa","Vehículo:","Auto","Barco","Tren"] --Agregar sus propios tests.
-  ]
+  reducerProcess (\(x, xs)->x : nub xs)  [("Saludo:",["Chau","Hola","Saludos"]),("Mamífero:",["Gato","Jirafa","Perro","Perro"]),("Edificio:",["Casa"]),("Vehículo:",["Auto","Barco","Tren"])] ~=? ["Saludo:","Chau","Hola","Saludos","Mamífero:","Gato","Jirafa","Perro","Edificio:","Casa","Vehículo:","Auto","Barco","Tren"],
+   --Agregar sus propios tests.
+  reducerProcess reducerdiapos [("Francia", [2,2]), ("miCasa", [1,1,1,1,1,1,1,1,1]), ("FCEN", [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1])] ~=? [("Francia", 2),("miCasa",9),("FCEN",18)],
+  reducerProcess reducerOPV [(2,["Francia"]),(9,["miCasa"]),(18,["FCEN"])]  ~=? ["Francia","miCasa","FCEN"]
+
+  ] 
 
 testsEj10 = test [
   sort (visitasPorMonumento ["m1","m2","m3","m2"]) ~=? [("m1",1),("m2",2),("m3",1)],
   [("Argentina",2),("Irak",1)] ~=? sort (monumentosPorPais items),
-  monumentosTop ["m3","m2","m2","m3","m1","m2","m3","m3","m4","m1"] ~=? ["m3","m2","m1","m4"] --Agregar sus propios tests.
+  monumentosTop ["m3","m2","m2","m3","m1","m2","m3","m3","m4","m1"] ~=? ["m3","m2","m1","m4"],
+  --Agregar sus propios tests.
+  restosMod5 [1,2,3]  ~=? [(1,1),(2,1),(3,1)],
+  ordenarPorVisitas [("Argentina",10), ("Italia",5), ("Chile",20)] ~=? ["Chile","Argentina","Italia"],
+  ordenarPorVisitas [("Argentina",100), ("Italia",5), ("Chile",20)] ~=? ["Argentina","Chile","Italia"]
   ]
