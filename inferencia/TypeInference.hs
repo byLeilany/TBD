@@ -61,42 +61,58 @@ infer' (SuccExp e)    n =
                               TNat))
     
 
--- COMPLETAR DESDE AQUIf
-
+-- COMPLETAR DESDE AQUI
 
 infer' ZeroExp                n = OK(n, (emptyContext, ZeroExp, TNat))
-
-infer' (VarExp x)             n = OK(n+1, (extendC (emptyContext x (TVar n+1)), (VarExp x), TVar (n+1)))
-
-infer' (AppExp u v)           n =
+infer' (VarExp x)             n = OK(n+1, (extendC emptyContext x (TVar (n)), VarExp x, (TVar (n))))
+infer' (AppExp u v)           n = 
   
   case infer' u n of
     err@(Error _) -> err
-    OK (n',(c',e',t')) -> 
+    OK(n',(c',e',t')) -> 
       
       case infer' v n' of 
         err@(Error _) -> err
-        OK (nDos,(cDos,eDos,tDos)) ->
-           case mgu ([(t', TFun tDos (TVar nDos))]++[(evalC c' x, evalC cDos x)| x <- (intersect (domainC c') (domainC cDos))]) of
+        OK(m,(d,f,r)) ->
+          case mgu ([(t', TFun r (TVar m))]++[(evalC c' x, evalC d x) | x <-(intersect (domainC c') (domainC d))]) of 
             UError u1 u2 -> uError u1 u2
-            UOK subst -> OK (nDos, (subst <.> joinC [c',cDos],
-                             subst <.> (AppExp e' eDos) ,
-                             subst <.> (TVar nDos)))
+            UOK subst -> OK((m+1), (subst <.> (joinC [c', d]), subst <.> (AppExp e' f), subst <.> (TVar m)))
 
 
+                             
 infer' (LamExp x _ e)         n =   
   case infer' e n of 
     err@(Error _) -> err
     OK (n',(c',e',t')) -> 
       if (elem x (domainC c')) then OK (n', (removeC c' x, LamExp x (evalC c' x) e', TFun (evalC c' x) t'))
-      else OK (n', (removeC c' x, LamExp x (TVar n') e', TFun (TVar n') t'))
+      else OK (n'+1, (removeC c' x, LamExp x (TVar n') e', TFun (TVar n') t'))
+
 
 -- OPCIONALES
 
-infer' (PredExp e)            n = undefined
-infer' (IsZeroExp e)          n = undefined
-infer' TrueExp                n = undefined
-infer' FalseExp               n = undefined
+infer' (PredExp e)            n = 
+  case infer' e n of 
+  err@(Error _) -> err
+  OK(m,(d,f,r)) ->
+    case mgu ([(TNat, r)]) of 
+      UError u1 u2 -> uError u1 u2
+      UOK subst -> OK((m+1), (subst <.> d, subst <.> (PredExp f), TNat))
+
+
+
+infer' (IsZeroExp e)          n = 
+  case infer' e n of 
+  err@(Error _) -> err
+  OK(m,(d,f,r)) ->
+    case mgu ([(TNat, r)]) of 
+      UError u1 u2 -> uError u1 u2
+      UOK subst -> OK((m+1), (subst <.> d, subst <.> (IsZeroExp f), TBool))
+ 
+
+infer' TrueExp                n = OK(n, (emptyContext, TrueExp, TBool))
+
+infer' FalseExp               n = OK(n, (emptyContext, FalseExp, TBool))
+
 infer' (IfExp u v w)          n = undefined
 
 --------------------------------
