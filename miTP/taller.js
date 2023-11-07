@@ -118,11 +118,17 @@ function calcularResultado() {
   res += "\n";
   res += "<b>Ejercicio 4</b>\n" + crearTest(4, testEjercicio4)();
   res += "\n";
+  res += "<b>Ejercicio 4 (agregado por el grupo) </b>\n" + crearTest(4, testEjercicio4grupo)();
+  res += "\n";
   res += "<b>Ejercicio 5</b>\n" + crearTest(5, testEjercicio5)();
+  res += "\n";
+  res += "<b>Ejercicio 5 (agregado por el grupo) </b>\n" + crearTest(5, testEjercicio5grupo)();
   res += "\n";
   res += "<b>Ejercicio 6</b>\n" + crearTest(6, testEjercicio6)();
   res += "\n";
   res += "<b>Ejercicio 7</b>\n" + crearTest(7, testEjercicio7)();
+  res += "\n";
+  res += "<b>Ejercicio 7 (agregado por el grupo) </b>\n" + crearTest(7, testEjercicio7grupo)();
   return res;
 }
 
@@ -189,6 +195,27 @@ function testEjercicio4(res) {
   res.test(!B_sabe_limpiar);
 }
 
+function testEjercicio4grupo(res) {
+  //Testeamos que, aunque en Robot la función presentarse() es basada en la de Malambo, modificar presentarse en una instancia de 
+  // Robot no modifica la de Malambo ni de otra instancia de Robot
+  let D = new Robot("D", 100, "aspirar", function(){return "aspirado"});
+  let E = new Robot("E", 6000, "levantar pesas", function(){return "no pain no gain"})
+  res.test(D.presentarse(), "Hola, soy D y me encanta aspirar.");
+  res.test(E.presentarse(), "Hola, soy E y me encanta levantar pesas.")
+  res.test(Malambo.presentarse(), "Hola, soy Malambo y me encanta limpiar.");
+  
+  D.presentarse = function(){return "Hola, soy D."}
+  res.test(D.presentarse(), "Hola, soy D.");
+  let M_presentarse = (Malambo.presentarse() == "Hola, soy Malambo y me encanta limpiar.")
+  res.test(M_presentarse)
+  res.write("Si creo una instancia con Robot y modifico su función de presentarse, la función de presentarse de Malambo " + si_o_no(!M_presentarse) + "se modifica")
+  let E_presentarse = (E.presentarse() == "Hola, soy E y me encanta levantar pesas.")
+  res.test(E_presentarse)
+  res.write("Si creo una instancia con Robot y modifico su función de presentarse, la función de presentarse de otras instancias " + si_o_no(!E_presentarse) + "se modifican")
+
+}
+
+
 // Test Ejercicio 5
 function testEjercicio5(res) {
   res.write("Peso de Malambo: " + Malambo.peso);
@@ -218,6 +245,18 @@ function testEjercicio5(res) {
   res.test(resultado_3, "fC");
   res.test(resultado_4, "fC");
 }
+
+function testEjercicio5grupo(res) {
+  let R = new Robot("Robotito", 10, "bañar perros", function(){return "bañar perros"})
+  let malambo_peso = Malambo.peso;
+  let resultado = Milonga.mensajear(Malambo, R, "limpiar");
+  res.write("Resultado Malambo -> limpiar -> Robotito: " + resultado);
+  res.test(resultado, "limpiar");
+  let peso_inc = (Malambo.peso == malambo_peso);
+  res.test(peso_inc);
+  res.write("Como Robotito es una instancia de Robot y no sabe responder a 'limpiar', no le devuelve la directiva a Malambo y el peso de Malambo " + si_o_no(!peso_inc) + "incrementa")
+}
+
 
 // Test Ejercicio 6
 function testEjercicio6(res) {
@@ -292,6 +331,54 @@ function testEjercicio7(res) {
   res.test(malambo_sabe_pedir_ayuda);
   res.test(chacarera_sabe_pedir_ayuda);
 }
+
+function testEjercicio7grupo(res){
+  let A = new Robot("A", 0.2, "a", function(){return "a"});
+  let B = new Robot("B", 0.3, "b", function(){return "b"});
+  let C = new Robot("C", 0.3, "c", function(){return "c"});
+  let D = new Robot("D", 0.6, "d", function(){return "d"});
+
+  res.write("B le pide ayuda a A: ")
+  res.write("Directiva de A antes de ayudar a B: " + A.directiva);
+  res.write("Ayudante de B antes de pedir ayuda a A: " + nombre(B.ayudante));
+  B.solicitarAyuda(A);
+  res.assert("b" in A, "A debería tener el método \"b\" después de de que B le pide ayuda.");
+  res.test(A.b(), "b");
+  res.write("Directiva de A después de ayudar a B: " + A.directiva);
+  res.write("Ayudante de B después de pedir ayuda a A: " + nombre(B.ayudante));
+  res.write("--")
+
+  res.write("B le pide ayuda a C: ")
+  res.write("Directiva de C antes de ayudar a B: " + C.directiva);
+  res.write("Ayudante de B antes de pedir ayuda a C: " + nombre(B.ayudante));
+  res.write("Ayudante de A antes de que B le pida ayuda a C: " + nombre(A.ayudante));
+  res.test(B.ayudante, A);
+  res.test(!("ayudante" in A));
+  res.test(A.directiva, "b");
+  B.solicitarAyuda(C);
+  res.write("Directiva de C después de ayudar a B: " + C.directiva);
+  res.write("Ayudante de B después de pedir ayuda a C: " + nombre(B.ayudante));
+  res.write("Ayudante de A después de que B le pida ayuda a C: " + nombre(A.ayudante));
+  res.test(B.ayudante, A);
+  res.test(A.ayudante, C);
+  res.assert(!("ayudante" in C),"C no debería tener ayudante.");
+  res.test(A.directiva, "b");
+  res.test(C.directiva, "b");
+  
+  // Si B solicita otro ayudante, como su ayudante A ya tiene como ayudante a C, el nuevo ayudante D debería ser ayudante de C
+  res.write("--")
+  res.write("B le pide ayuda a D: ")
+  res.write("Directiva de D antes de ayudar a B: " + D.directiva);
+  B.solicitarAyuda(D)
+  res.write("Ayudante de B después de pedir ayuda a D: " + nombre(B.ayudante));
+  res.test(B.ayudante, A)
+  res.write("Ayudante de A después de que B le pida ayuda a D: " + nombre(A.ayudante));
+  res.test(A.ayudante, C)
+  res.write("Ayudante de C después de que B le pida ayuda a D: " + nombre(C.ayudante));
+  res.test(C.ayudante, D)
+  res.test(D.directiva, "b");
+}
+
 
 function nombre(objeto) {
   if (objeto) return objeto.nombre;
