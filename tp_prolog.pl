@@ -27,15 +27,9 @@ color_nodo(grafo([(X,_)|XS],_),N,C) :- N \= X , color_nodo(grafo(XS,_),N,Col2), 
 
 % Ejercicio 3
 % vecino(+G, ?V, ?W).
-vecino(grafo(_ ,[]),V ,W ).
-vecino(grafo(_ ,[(X,Y)| XS ]),V ,W ).
-vecino(grafo(_ ,[(X,Y)| XS ]), X, W) :- vecino(grafo(_,XS),X,W).
-vecino(grafo(_ ,[(X,Y)| XS ]), V, W) :- V \= X, W \= Y, W \= X, V \= Y,  vecino(grafo(_,XS),V,W).
 
-%vecino(G, V, W) :- var(W), var(V), vecinovar(G,V,W).
-%vecino(grafo(_ ,[(V,W)| XS ]), V, W) :- nonvar(W), ,vecino(grafo(_ ,[(V,W)| XS ]), W,V )  .
-%vecino(grafo(_ ,[(W,V)| XS ]), V, W) :- nonvar(V).
-
+vecino(grafo(_ ,E), V, W) :- member((V, W), E).
+vecino(grafo(_ ,E), V, W) :- member((W, V), E).
 
 %vecino(grafo([(n1,1),(n2,2),(n3,3),(n4,4),(n5,5)],[(n1,n2),(n2,n3),(n4,n5)]),W,V).
 
