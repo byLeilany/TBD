@@ -9,9 +9,9 @@ ejemplo(c4, [(n1,n2),(n2,n3),(n3,n4),(n4,n1)]).
 armar_grafo(XS, grafo(C, XS)) :- armar_grafoaux(XS, C, N).
 
 armar_grafoaux( [], [], 0).
-armar_grafoaux( [(X,Y) | Xs],[(X,N1) | G], N1) :- armar_grafoaux(Xs, G, N),  member((Y,_), G) , not(member((X,_), G)), N1 is N + 1.
-armar_grafoaux( [(X,Y) | Xs],[(Y, N1) | G], N1) :- armar_grafoaux(Xs, G, N),  member((X,_), G) , not(member((Y,_), G)), N1 is N + 1.
-armar_grafoaux( [(X,Y) | Xs],[(X,N1), (Y, N2) | G], N2) :- armar_grafoaux(Xs, G, N) ,not(member((Y,_), G)) , not(member((X,_), G))  , N1 is N + 1,  N2 is N + 2.
+armar_grafoaux( [(X,Y) | Xs], [(X,N1) | G], N1) :- armar_grafoaux(Xs, G, N),  member((Y,_), G) , not(member((X,_), G)), N1 is N + 1.
+armar_grafoaux( [(X,Y) | Xs], [(Y, N1) | G], N1) :- armar_grafoaux(Xs, G, N),  member((X,_), G) , not(member((Y,_), G)), N1 is N + 1.
+armar_grafoaux( [(X,Y) | Xs], [(X,N1),(Y, N2) | G], N2) :- armar_grafoaux(Xs, G, N) ,not(member((Y,_), G)) , not(member((X,_), G))  , N1 is N + 1,  N2 is N + 2.
 
 %,not(member((Y,_), G)) , not(member((X,_), G))
 %armar_grafo([(n1,n2),(n2,n3)],X).
@@ -27,7 +27,6 @@ color_nodo(grafo([(X,_)|XS],_),N,C) :- N \= X , color_nodo(grafo(XS,_),N,Col2), 
 
 % Ejercicio 3
 % vecino(+G, ?V, ?W).
-
 vecino(grafo(_ ,E), V, W) :- member((V, W), E).
 vecino(grafo(_ ,E), V, W) :- member((W, V), E).
 
@@ -35,7 +34,7 @@ vecino(grafo(_ ,E), V, W) :- member((W, V), E).
 
 % Ejercicio 4
 % colores_vecinos(+G, +Nodo, -Colores).
-
+colores_vecinos(G,Nodo,Res) :- findall(Color, (vecino(G,Nodo,Vec), color_nodo(G,Vec,Color), nonvar(Color)), Res).
 
 % Ejercicio 5
 % pintar_nodo(+Paleta, ?Grafo, +Nodo).
