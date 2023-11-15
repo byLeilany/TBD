@@ -1,6 +1,8 @@
 % ejemplo(+Codigo, -E)
 ejemplo(c4, [(n1,n2),(n2,n3),(n3,n4),(n4,n1)]).
-
+ejemplo(casita, [(n1,n2),(n2,n3),(n3,n4),(n4,n1),(n1,n5),(n5,n2)]).
+ejemplo(completo, [(n1,n2),(n1,n3),(n1,n4),(n2,n3),(n2,n4),(n3,n4),(n1,n5),(n2,n5),(n3,n5),(n4,n5)] ).
+ejemplo(chikito, [(n1,n2),(n2,n3)]).
 
 % Ejercicio 1
 % armar_grafo(+E,-Grafo).
@@ -49,10 +51,10 @@ mismo_color(Grafo, V, W) :- color_nodo(Grafo, V, _C), color_nodo(Grafo, W, _C).
 
 % Ejercicio 8
 % es_valido(+Grafo)
-es_valido(grafo(Colores, E)) :- es_valido_aux(Colores, grafo(Colores, E)).
+es_valido(grafo(Colores, E)) :- colores_validos(Colores, grafo(Colores, E)).
 
-es_valido_aux([], G).
-es_valido_aux([(Nodo, Color) | Colores], G) :- not((vecino(G, Nodo, Vecino), member((Vecino,Color), Colores))), es_valido_aux(Colores, G).
+colores_validos([], G).
+colores_validos([(Nodo, Color) | Colores], G) :- not((vecino(G, Nodo, Vecino), member((Vecino,Color), Colores))), colores_validos(Colores, G).
 
 
 % Ejercicio 9
@@ -60,7 +62,6 @@ es_valido_aux([(Nodo, Color) | Colores], G) :- not((vecino(G, Nodo, Vecino), mem
 coloreo(Grafo, Coloreo) :- coloreos_validos_posibles(Grafo, Coloreo), sin_huecos(Coloreo).
 
 coloreos_validos_posibles(grafo(ListaCol, Aristas), ListaCol) :- length(ListaCol, N), pintar_grafo(N, grafo(ListaCol, Aristas)), es_valido(grafo(Coloreo,Aristas)).
-
 
 sin_huecos(Coloreo) :- max_color(Coloreo, Max), todos_hasta_max(Coloreo, Max).
 
@@ -77,32 +78,17 @@ test(4) :- es_valido(grafo([(n2, 1),  (n3, 2),  (n4, 1),  (n1, 2)], [(n1, n2),  
 test(5) :- not(es_valido(grafo([(n2, 1),  (n3, 2),  (n4, 1),  (n1, 1)], [(n1, n2),  (n2, n3),  (n3, n4),  (n4, n1)]))).
 test(6) :- findall(CS,(ejemplo(c4, E), armar_grafo(E, G), coloreo(G, CS)),L), length(L,38).
 test(7) :- ejemplo(c4, E), armar_grafo(E, G), coloreo(G, CS), sort(CS, [(n1, 2), (n2, 1), (n3, 2), (n4, 3)]).
-
-
-ejemplo(casita, [(n1,n2),(n2,n3),(n3,n4),(n4,n1),(n1,n5),(n5,n2)]).
-ejemplo(completo, [(n1,n2),(n1,n3),(n1,n4),(n2,n3),(n2,n4),(n3,n4),(n1,n5),(n2,n5),(n3,n5),(n4,n5)] ).
-
-
-
 %va a buscar todas las permutaciones del 5 coloreo.
 test(8) :- findall(CS,(ejemplo(completo, E), armar_grafo(E, G), coloreo(G, CS)),L), length(L,120). 
-
 % colocamos 2 vecinos con el mismo color, no debe haber coloreo.
 test(9) :- not((ejemplo(casita, E), armar_grafo(E, G), mismo_color(G,n1,n2), coloreo(G,CS))) .
 test(10) :- not((ejemplo(casita, E), armar_grafo(E, G), color_nodo(G,n1,5) ,mismo_color(G,n1,n2), coloreo(G,CS))) .
-
 test(11) :- ejemplo(casita, E), armar_grafo(E, G),colores_vecinos(G, n1, []).
-
 test(12) :- ejemplo(casita, E), armar_grafo(E, G), color_nodo(G,n3,2), color_nodo(G,n4,1), color_nodo(G,n1,3) ,  pintar_grafo(3,G), color_nodo(G,n5,2), color_nodo(G,n2,1).
-
 test(13)  :- ejemplo(casita, E), armar_grafo(E, G), color_nodo(G,n3,2), color_nodo(G,n4,1), color_nodo(G,n1,3) , color_nodo(G,n5,2), color_nodo(G,n2,1), findall(CS, coloreo(G,CS),L), length(L,1).
-
-
-ejemplo(chikito, [(n1,n2),(n2,n3)]).
 test(14) :- ejemplo(chikito, E), armar_grafo(E, G),  color_nodo(G,n3,3), color_nodo(G,n2,2) ,  color_nodo(G,n1,1), damecolor(G,CS), sin_huecos(CS).
-
 test(15) :- ejemplo(chikito, E), armar_grafo(E, G),  color_nodo(G,n3,3), color_nodo(G,n2,3) ,  color_nodo(G,n1,3), damecolor(G,CS), not(sin_huecos(CS)).
 damecolor(grafo(C,E),C).
 
-%, color_nodo(G,n3,2), color_nodo(G,n4,1), color_nodo(G,n1,3)
+
 tests :- forall(between(1,15,N), test(N)). % Hacer sus propios tests y cambiar el 10 por la cantidad de tests que tengan.
