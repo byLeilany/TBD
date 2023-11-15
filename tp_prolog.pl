@@ -53,7 +53,7 @@ mismo_color(Grafo, V, W) :- color_nodo(Grafo, V, _C), color_nodo(Grafo, W, _C).
 % es_valido(+Grafo)
 es_valido(grafo(Colores, E)) :- colores_validos(Colores, grafo(Colores, E)).
 
-colores_validos([], G).
+colores_validos([], _).
 colores_validos([(Nodo, Color) | Colores], G) :- not((vecino(G, Nodo, Vecino), member((Vecino,Color), Colores))), colores_validos(Colores, G).
 
 
@@ -65,8 +65,8 @@ coloreos_validos_posibles(grafo(ListaCol, Aristas), ListaCol) :- length(ListaCol
 
 sin_huecos(Coloreo) :- max_color(Coloreo, Max), todos_hasta_max(Coloreo, Max).
 
-max_color([(Nodo, Color)], Color).
-max_color([(Nodo, Col) | Colores], Max) :- max_color(Colores, MaxRec), Max is max(Col, MaxRec).  
+max_color([(_, Color)], Color).
+max_color([(_, Col) | Colores], Max) :- max_color(Colores, MaxRec), Max is max(Col, MaxRec).  
 
 todos_hasta_max(Coloreo, Max) :- forall(between(1, Max, N), member((_,N), Coloreo)).
 
@@ -88,7 +88,7 @@ test(12) :- ejemplo(casita, E), armar_grafo(E, G), color_nodo(G,n3,2), color_nod
 test(13)  :- ejemplo(casita, E), armar_grafo(E, G), color_nodo(G,n3,2), color_nodo(G,n4,1), color_nodo(G,n1,3) , color_nodo(G,n5,2), color_nodo(G,n2,1), findall(CS, coloreo(G,CS),L), length(L,1).
 test(14) :- ejemplo(chikito, E), armar_grafo(E, G),  color_nodo(G,n3,3), color_nodo(G,n2,2) ,  color_nodo(G,n1,1), damecolor(G,CS), sin_huecos(CS).
 test(15) :- ejemplo(chikito, E), armar_grafo(E, G),  color_nodo(G,n3,3), color_nodo(G,n2,3) ,  color_nodo(G,n1,3), damecolor(G,CS), not(sin_huecos(CS)).
-damecolor(grafo(C,E),C).
+damecolor(grafo(C,_),C).
 
 
 tests :- forall(between(1,15,N), test(N)). % Hacer sus propios tests y cambiar el 10 por la cantidad de tests que tengan.
